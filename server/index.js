@@ -13,7 +13,6 @@ app.use(cors());
 app.use(express.json());
 
 let savedOTP = "";
-let savedKey = "";
 
 // ================= GMAIL CONFIG =================
 const transporter = nodemailer.createTransport({
@@ -40,26 +39,20 @@ app.post("/send-otp", async (req, res) => {
   ];
 
   try {
-    // ===== SOUTH INDIA → EMAIL OTP =====
+    // South → Email + return OTP
     if (southStates.includes(state)) {
-      savedKey = email;
-
-      const info = await transporter.sendMail({
+      await transporter.sendMail({
         from: process.env.GMAIL_USER,
         to: email,
         subject: "Login OTP 🔐",
-        text: `Your OTP for login is: ${otp}`
+        text: `Your OTP is ${otp}`
       });
 
-      console.log("Email sent:", info.response);
-      return res.json({ success: true });
+      return res.json({ success: true, otp });
     }
 
-    // ===== OTHER STATES → SIMULATED SMS =====
-    savedKey = phone;
-    console.log("Phone OTP (Demo):", otp);
-
-    return res.json({ success: true });
+    // Other states → Just return OTP
+    return res.json({ success: true, otp });
 
   } catch (error) {
     console.log("OTP ERROR:", error.message);
@@ -67,15 +60,10 @@ app.post("/send-otp", async (req, res) => {
   }
 });
 
-// ================= VERIFY OTP =================
+// ================= VERIFY =================
 app.post("/verify-otp", (req, res) => {
   const { otp } = req.body;
-
-  if (otp === savedOTP) {
-    return res.json({ success: true });
-  } else {
-    return res.json({ success: false });
-  }
+  res.json({ success: otp === savedOTP });
 });
 
 // ================= INVOICE EMAIL =================
@@ -92,10 +80,12 @@ app.post("/send-invoice", async (req, res) => {
       from: process.env.GMAIL_USER,
       to: email,
       subject: "Plan Upgrade Confirmation 🎉",
-      text: `Your ${plan} plan has been activated successfully.\nAmount Paid: ₹${price}\n\nThank you for choosing us.`
+      text: `Your ${plan} plan has been activated successfully.
+Amount Paid: ₹${price}
+
+Thank you for choosing us.`
     });
 
-    console.log("Invoice sent to:", email);
     return res.json({ success: true });
 
   } catch (error) {
@@ -104,11 +94,10 @@ app.post("/send-invoice", async (req, res) => {
   }
 });
 
-// ================= REACT BUILD SERVE =================
+// ================= SERVE REACT =================
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// IMPORTANT: index.js server folder me hai
 const buildPath = path.join(__dirname, "../client/build");
 
 app.use(express.static(buildPath));
@@ -117,7 +106,6 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(buildPath, "index.html"));
 });
 
-// ================= PORT =================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
