@@ -1,0 +1,23 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^4.22.1",
+    "mongoose": "^8.0.0",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^8.0.1",
+    "socket.io": "^4.7.2",
+    "twilio": "^5.12.2"
+  }
+}
