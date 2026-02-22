@@ -3,6 +3,7 @@ import cors from "cors";
 import twilio from "twilio";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import path from "path";
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ app.post("/send-otp", async (req,res)=>{
 
   try{
 
+    // SOUTH INDIA → EMAIL OTP
     if(south.includes(state)){
       await transporter.sendMail({
         from: process.env.GMAIL_USER,
@@ -52,9 +54,11 @@ app.post("/send-otp", async (req,res)=>{
         subject: "Your OTP",
         text: `Your login OTP is ${otp}`
       });
+
       return res.json({success:true});
     }
 
+    // OTHER STATES → PHONE OTP
     await client.messages.create({
       body: `Your OTP is ${otp}`,
       from: twilioNumber,
@@ -69,7 +73,7 @@ app.post("/send-otp", async (req,res)=>{
   }
 });
 
-// ===== VERIFY =====
+// ===== VERIFY OTP =====
 app.post("/verify-otp",(req,res)=>{
   const { otp } = req.body;
 
@@ -80,7 +84,7 @@ app.post("/verify-otp",(req,res)=>{
   }
 });
 
-// ===== INVOICE =====
+// ===== INVOICE EMAIL =====
 app.post("/send-invoice", async (req,res)=>{
   const { email, plan } = req.body;
 
@@ -97,8 +101,19 @@ app.post("/send-invoice", async (req,res)=>{
 });
 
 
-// ⭐⭐⭐ IMPORTANT CHANGE ⭐⭐⭐
+// ===== FRONTEND SERVE (VERY IMPORTANT) =====
+const __dirname = path.resolve();
+
+app.use(express.static(path.join(__dirname, "client/build")));
+
+app.get("*",(req,res)=>{
+  res.sendFile(path.join(__dirname,"client/build","index.html"));
+});
+
+
+// ===== PORT =====
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>{
+
+app.listen(PORT,()=>{
   console.log("🚀 Server running on", PORT);
 });
