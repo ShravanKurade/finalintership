@@ -13,14 +13,10 @@ app.use(express.json());
 
 let savedOTP = "";
 
-// ===== TWILIO CONFIG =====
-const accountSid = process.env.TWILIO_SID;
-const authToken = process.env.TWILIO_AUTH;
-const twilioNumber = process.env.TWILIO_NUMBER;
+// ===== TWILIO =====
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
 
-const client = twilio(accountSid, authToken);
-
-// ===== GMAIL CONFIG =====
+// ===== GMAIL =====
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -36,17 +32,9 @@ app.post("/send-otp", async (req,res)=>{
   const otp = Math.floor(1000 + Math.random()*9000).toString();
   savedOTP = otp;
 
-  const south = [
-    "Tamil Nadu",
-    "Kerala",
-    "Karnataka",
-    "Andhra Pradesh",
-    "Telangana"
-  ];
+  const south = ["Tamil Nadu","Kerala","Karnataka","Andhra Pradesh","Telangana"];
 
   try{
-
-    // SOUTH INDIA → EMAIL OTP
     if(south.includes(state)){
       await transporter.sendMail({
         from: process.env.GMAIL_USER,
@@ -54,40 +42,30 @@ app.post("/send-otp", async (req,res)=>{
         subject: "Your OTP",
         text: `Your login OTP is ${otp}`
       });
-
       return res.json({success:true});
     }
 
-    // OTHER STATES → PHONE OTP
     await client.messages.create({
       body: `Your OTP is ${otp}`,
-      from: twilioNumber,
+      from: process.env.TWILIO_NUMBER,
       to: `+91${phone}`
     });
 
     res.json({success:true});
-
   }catch(err){
     console.log(err);
     res.json({success:false});
   }
 });
 
-// ===== VERIFY OTP =====
+// ===== VERIFY =====
 app.post("/verify-otp",(req,res)=>{
-  const { otp } = req.body;
-
-  if(otp===savedOTP){
-    res.json({success:true});
-  }else{
-    res.json({success:false});
-  }
+  res.json({success: req.body.otp===savedOTP});
 });
 
-// ===== INVOICE EMAIL =====
+// ===== INVOICE =====
 app.post("/send-invoice", async (req,res)=>{
   const { email, plan } = req.body;
-
   let price = plan==="Bronze"?10:plan==="Silver"?50:100;
 
   await transporter.sendMail({
@@ -101,19 +79,22 @@ app.post("/send-invoice", async (req,res)=>{
 });
 
 
-// ===== FRONTEND SERVE (VERY IMPORTANT) =====
+// ==================== VERY IMPORTANT ====================
+// 🔥 React build serve (FINAL FIX)
+
 const __dirname = path.resolve();
 
-app.use(express.static(path.join(__dirname, "client/build")));
+// agar build folder exist kare tab serve karo
+app.use(express.static(path.join(__dirname,"client","build")));
 
 app.get("*",(req,res)=>{
-  res.sendFile(path.join(__dirname,"client/build","index.html"));
+  res.sendFile(path.join(__dirname,"client","build","index.html"));
 });
 
 
-// ===== PORT =====
+// ================= PORT =================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT,()=>{
-  console.log("🚀 Server running on", PORT);
+  console.log("🚀 Server running on",PORT);
 });
