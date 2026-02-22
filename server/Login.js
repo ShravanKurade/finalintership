@@ -16,7 +16,7 @@ const sendOTP = async ()=>{
   }
 
   try{
-    const res = await axios.post("http://localhost:5000/send-otp",{
+    const res = await axios.post("https://intern-jwq8.onrender.com/",{
       email,
       state
     });
@@ -41,7 +41,7 @@ const sendOTP = async ()=>{
 };
 
 const verify = async ()=>{
-  const res = await axios.post("http://localhost:5000/verify-otp",{otp});
+  const res = await axios.post("https://intern-jwq8.onrender.com/",{otp});
 
   if(res.data.success){
     setVerified(true);
