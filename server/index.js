@@ -13,7 +13,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-let savedOTP = "";
+// ===== OTP STORE =====
+let otpStore = {};   // store otp by email
 
 // ===== TWILIO =====
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
@@ -32,12 +33,14 @@ app.post("/send-otp", async (req,res)=>{
   const { email, phone, state } = req.body;
 
   const otp = Math.floor(1000 + Math.random()*9000).toString();
-  savedOTP = otp;
+
+  // store otp by email
+  otpStore[email] = otp;
 
   const south = ["Tamil Nadu","Kerala","Karnataka","Andhra Pradesh","Telangana"];
 
   try{
-    // SOUTH INDIA → EMAIL
+    // SOUTH → EMAIL OTP
     if(south.includes(state)){
       await transporter.sendMail({
         from: process.env.GMAIL_USER,
@@ -48,7 +51,7 @@ app.post("/send-otp", async (req,res)=>{
       return res.json({success:true});
     }
 
-    // OTHER → SMS
+    // OTHER → SMS OTP
     await client.messages.create({
       body: `Your OTP is ${otp}`,
       from: process.env.TWILIO_NUMBER,
@@ -65,46 +68,52 @@ app.post("/send-otp", async (req,res)=>{
 
 // ================= VERIFY OTP =================
 app.post("/verify-otp",(req,res)=>{
-  res.json({success: req.body.otp === savedOTP});
+  const { email, otp } = req.body;
+
+  if(otpStore[email] === otp){
+    delete otpStore[email]; // remove after use
+    res.json({success:true});
+  }else{
+    res.json({success:false});
+  }
 });
 
-// ================= INVOICE MAIL =================
+// ================= INVOICE =================
 app.post("/send-invoice", async (req,res)=>{
   const { email, plan } = req.body;
-
   let price = plan==="Bronze"?10:plan==="Silver"?50:100;
 
-  await transporter.sendMail({
-    from: process.env.GMAIL_USER,
-    to: email,
-    subject: "Plan Activated",
-    text: `Plan ${plan} activated successfully. Amount ₹${price}`
-  });
+  try{
+    await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: email,
+      subject: "Plan Activated",
+      text: `Plan ${plan} activated successfully. Amount ₹${price}`
+    });
 
-  res.json({success:true});
+    res.json({success:true});
+  }catch(err){
+    console.log(err);
+    res.json({success:false});
+  }
 });
 
 
-// =================================================
-// 🔥🔥🔥 REACT BUILD SERVE FINAL FIX 🔥🔥🔥
-// =================================================
+// ===================================================
+// 🔥 REACT BUILD SERVE (FINAL RENDER FIX)
+// ===================================================
 
-// ES module dirname fix
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// ⭐⭐⭐ IMPORTANT PATH ⭐⭐⭐
-// server folder ke andar index.js hai
-// isliye ../client/build use hoga
-
-app.use(express.static(path.join(__dirname, "../client/build")));
+// serve frontend build
+app.use(express.static(path.join(__dirname,"../client/build")));
 
 app.get("*",(req,res)=>{
-  res.sendFile(path.join(__dirname, "../client/build", "index.html"));
+  res.sendFile(path.join(__dirname,"../client/build","index.html"));
 });
 
-
-// ===== PORT =====
+// ================= PORT =================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT,()=>{
