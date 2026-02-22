@@ -27,7 +27,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// ===== SEND OTP =====
+// ================= SEND OTP =================
 app.post("/send-otp", async (req,res)=>{
   const { email, phone, state } = req.body;
 
@@ -37,7 +37,7 @@ app.post("/send-otp", async (req,res)=>{
   const south = ["Tamil Nadu","Kerala","Karnataka","Andhra Pradesh","Telangana"];
 
   try{
-    // SOUTH → EMAIL
+    // SOUTH INDIA → EMAIL
     if(south.includes(state)){
       await transporter.sendMail({
         from: process.env.GMAIL_USER,
@@ -56,20 +56,22 @@ app.post("/send-otp", async (req,res)=>{
     });
 
     res.json({success:true});
+
   }catch(err){
-    console.log(err);
+    console.log("OTP ERROR:",err);
     res.json({success:false});
   }
 });
 
-// ===== VERIFY OTP =====
+// ================= VERIFY OTP =================
 app.post("/verify-otp",(req,res)=>{
   res.json({success: req.body.otp === savedOTP});
 });
 
-// ===== INVOICE =====
+// ================= INVOICE MAIL =================
 app.post("/send-invoice", async (req,res)=>{
   const { email, plan } = req.body;
+
   let price = plan==="Bronze"?10:plan==="Silver"?50:100;
 
   await transporter.sendMail({
@@ -83,19 +85,22 @@ app.post("/send-invoice", async (req,res)=>{
 });
 
 
-// ===================================================
-// 🔥🔥 REACT BUILD SERVE (FINAL WORKING FIX)
-// ===================================================
+// =================================================
+// 🔥🔥🔥 REACT BUILD SERVE FINAL FIX 🔥🔥🔥
+// =================================================
 
-// dirname fix for ES module
+// ES module dirname fix
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// STATIC BUILD SERVE
-app.use(express.static(path.join(__dirname, "../../client/build")));
+// ⭐⭐⭐ IMPORTANT PATH ⭐⭐⭐
+// server folder ke andar index.js hai
+// isliye ../client/build use hoga
+
+app.use(express.static(path.join(__dirname, "../client/build")));
 
 app.get("*",(req,res)=>{
-  res.sendFile(path.join(__dirname, "../../client/build", "index.html"));
+  res.sendFile(path.join(__dirname, "../client/build", "index.html"));
 });
 
 
