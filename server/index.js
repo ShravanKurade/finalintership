@@ -1,6 +1,12 @@
 import express from "express";
 import cors from "cors";
+import twilio from "twilio";
 import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
@@ -8,82 +14,83 @@ app.use(express.json());
 
 let savedOTP = "";
 
+// ===== TWILIO =====
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
+
 // ===== GMAIL =====
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "sunitakurade1505@gmail.com",
-    pass: "ooiqfsycskzltrfo"
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS
   }
 });
 
 // ===== SEND OTP =====
 app.post("/send-otp", async (req,res)=>{
-  const { email, state } = req.body;
+  const { email, phone, state } = req.body;
 
   const otp = Math.floor(1000 + Math.random()*9000).toString();
   savedOTP = otp;
 
-  const south = [
-    "Tamil Nadu",
-    "Kerala",
-    "Karnataka",
-    "Andhra Pradesh",
-    "Telangana"
-  ];
+  const south = ["Tamil Nadu","Kerala","Karnataka","Andhra Pradesh","Telangana"];
 
   try{
-
-    // ===== SOUTH INDIA → EMAIL =====
+    // south → email
     if(south.includes(state)){
-
       await transporter.sendMail({
-        from:"sunitakurade1505@gmail.com",
-        to:email,
-        subject:"Login OTP 🔐",
-        text:`Your OTP is ${otp}`
+        from: process.env.GMAIL_USER,
+        to: email,
+        subject: "Your OTP",
+        text: `Your login OTP is ${otp}`
       });
 
-      console.log("MAIL SENT:",otp);
-
-      return res.json({
-        success:true,
-        msg:"OTP sent to Email",
-        otp:otp
-      });
+      return res.json({success:true, otp});
     }
 
-    // ===== OTHER STATES → DEMO OTP =====
-    return res.json({
-      success:true,
-      msg:"OTP generated",
-      otp:otp
-    });
+    // other → sms (optional)
+    console.log("OTP:", otp);
+    res.json({success:true, otp});
 
   }catch(err){
-    console.log("MAIL ERROR:",err);
-
-    // ⚠️ NO SERVER ERROR RETURN
-    return res.json({
-      success:true,
-      msg:"OTP generated (mail issue but demo ok)",
-      otp:otp
-    });
+    console.log(err);
+    res.json({success:false});
   }
 });
 
 // ===== VERIFY =====
 app.post("/verify-otp",(req,res)=>{
-  const { otp } = req.body;
-
-  if(otp===savedOTP){
-    res.json({success:true});
-  }else{
-    res.json({success:false});
-  }
+  res.json({success: req.body.otp===savedOTP});
 });
 
-// ===== START =====
-app.listen(5000,()=>{
-  console.log("🔥 Server running 5000");
+// ===== INVOICE =====
+app.post("/send-invoice", async (req,res)=>{
+  const { email, plan } = req.body;
+  let price = plan==="Bronze"?10:plan==="Silver"?50:100;
+
+  await transporter.sendMail({
+    from: process.env.GMAIL_USER,
+    to: email,
+    subject: "Plan Activated",
+    text: `Plan ${plan} activated successfully. Amount ₹${price}`
+  });
+
+  res.json({success:true});
+});
+
+
+// ===== SERVE REACT BUILD =====
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.join(__dirname, "../client/build")));
+
+app.get("*",(req,res)=>{
+  res.sendFile(path.join(__dirname,"../client/build/index.html"));
+});
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT,()=>{
+  console.log("🚀 Server running on",PORT);
 });
