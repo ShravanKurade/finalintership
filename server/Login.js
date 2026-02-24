@@ -16,21 +16,13 @@ const sendOTP = async ()=>{
   }
 
   try{
-    const res = await axios.post("https://intern-jwq8.onrender.com/",{
-      email,
-      state
-    });
+    const res = await axios.post(
+      "https://intern-jwq8.onrender.com/send-otp",
+      { email, state }
+    );
 
     if(res.data.success){
-
       alert("OTP Sent Successfully ✅");
-
-      if(res.data.msg.includes("Email")){
-        alert("Mail sent successfully 📧");
-      }
-
-      alert("Your OTP is: "+res.data.otp);   // 👈 OTP popup
-
     }else{
       alert("Failed");
     }
@@ -41,12 +33,20 @@ const sendOTP = async ()=>{
 };
 
 const verify = async ()=>{
-  const res = await axios.post("https://intern-jwq8.onrender.com/",{otp});
+  try{
+    const res = await axios.post(
+      "https://intern-jwq8.onrender.com/verify-otp",
+      { otp }
+    );
 
-  if(res.data.success){
-    setVerified(true);
-  }else{
-    alert("Wrong OTP");
+    if(res.data.success){
+      setVerified(true);
+    }else{
+      alert("Wrong OTP");
+    }
+
+  }catch{
+    alert("Server error");
   }
 };
 
@@ -67,7 +67,8 @@ return(
 
 <br/><br/>
 
-<input placeholder="Enter Email"
+<input
+placeholder="Enter Email"
 value={email}
 onChange={e=>setEmail(e.target.value)}
 />
@@ -78,7 +79,8 @@ onChange={e=>setEmail(e.target.value)}
 
 <br/><br/>
 
-<input placeholder="Enter OTP"
+<input
+placeholder="Enter OTP"
 value={otp}
 onChange={e=>setOtp(e.target.value)}
 />

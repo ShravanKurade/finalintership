@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import twilio from "twilio";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import path from "path";
@@ -14,10 +13,7 @@ app.use(express.json());
 
 let savedOTP = "";
 
-// ===== TWILIO =====
-const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
-
-// ===== GMAIL =====
+// ===== GMAIL CONFIG =====
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -28,7 +24,7 @@ const transporter = nodemailer.createTransport({
 
 // ===== SEND OTP =====
 app.post("/send-otp", async (req,res)=>{
-  const { email, phone, state } = req.body;
+  const { email, state } = req.body;
 
   const otp = Math.floor(1000 + Math.random()*9000).toString();
   savedOTP = otp;
@@ -36,7 +32,6 @@ app.post("/send-otp", async (req,res)=>{
   const south = ["Tamil Nadu","Kerala","Karnataka","Andhra Pradesh","Telangana"];
 
   try{
-    // south → email
     if(south.includes(state)){
       await transporter.sendMail({
         from: process.env.GMAIL_USER,
@@ -45,12 +40,14 @@ app.post("/send-otp", async (req,res)=>{
         text: `Your login OTP is ${otp}`
       });
 
-      return res.json({success:true, otp});
+      return res.json({
+        success:true,
+        msg:"Email sent successfully"
+      });
     }
 
-    // other → sms (optional)
     console.log("OTP:", otp);
-    res.json({success:true, otp});
+    res.json({success:true});
 
   }catch(err){
     console.log(err);
@@ -58,28 +55,30 @@ app.post("/send-otp", async (req,res)=>{
   }
 });
 
-// ===== VERIFY =====
+// ===== VERIFY OTP =====
 app.post("/verify-otp",(req,res)=>{
   res.json({success: req.body.otp===savedOTP});
 });
 
-// ===== INVOICE =====
+// ===== SEND INVOICE =====
 app.post("/send-invoice", async (req,res)=>{
   const { email, plan } = req.body;
   let price = plan==="Bronze"?10:plan==="Silver"?50:100;
 
-  await transporter.sendMail({
-    from: process.env.GMAIL_USER,
-    to: email,
-    subject: "Plan Activated",
-    text: `Plan ${plan} activated successfully. Amount ₹${price}`
-  });
+  try{
+    await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: email,
+      subject: "Plan Activated",
+      text: `Plan ${plan} activated successfully. Amount ₹${price}`
+    });
 
-  res.json({success:true});
+    res.json({success:true});
+  }catch{
+    res.json({success:false});
+  }
 });
 
-
-// ===== SERVE REACT BUILD =====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
