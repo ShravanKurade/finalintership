@@ -16,7 +16,7 @@ export default function DownloadPage() {
     setDownloadCount(count);
   }, []);
 
-  // DOWNLOAD
+  // 🎬 DOWNLOAD
   const handleDownload = () => {
 
     if (!isPremium && downloadCount >= 1) {
@@ -40,27 +40,21 @@ export default function DownloadPage() {
     alert("✅ Download Started!");
   };
 
-  // 💎 RAZORPAY PAYMENT
+  // 💎 DEMO PAYMENT (real jaisa popup)
   const upgradePremium = () => {
 
-    const options = {
-      key: "rzp_test_1DP5mmOlF5G5ag",   // demo public key
-      amount: 50000,
-      currency: "INR",
-      name: "Internship Premium",
-      description: "Unlock Unlimited Downloads",
+    const fake = window.confirm(
+      "Razorpay Secure Payment\n\nAmount: ₹500\nProceed to pay?"
+    );
 
-      handler: function () {
+    if(fake){
+      setTimeout(()=>{
         localStorage.setItem("premium","true");
         setIsPremium(true);
-        alert("🎉 Payment Successful! Premium Activated.");
-      },
 
-      theme: { color: "#00f2fe" }
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+        alert("🎉 Payment Successful!\nPremium Activated.");
+      },1500);
+    }
   };
 
   return (
@@ -76,7 +70,7 @@ export default function DownloadPage() {
 
       {!isPremium && (
         <button onClick={upgradePremium}>
-          Upgrade to Premium (₹500)
+          Upgrade to Premium ₹500
         </button>
       )}
 
