@@ -24,56 +24,53 @@ export default function PlanUpgrade() {
 
     if (video.currentTime >= limit) {
       video.pause();
-      alert(`${plan} plan limit finished`);
+      alert(`${plan} plan limit finished. Upgrade for more watching.`);
     }
   };
 
-  // 💳 RAZORPAY PAYMENT
-  const upgradePlan = (selectedPlan, price) => {
+  // 💳 DEMO RAZORPAY PAYMENT (internship safe)
+  const upgradePlan = async (selectedPlan, price) => {
 
     if (!email) {
       alert("Enter email first");
       return;
     }
 
-    const options = {
-      key: "rzp_test_SKUGTXTOi9QxJ0",
-      amount: price * 100,
-      currency: "INR",
-      name: "Internship Project",
-      description: selectedPlan + " Plan",
+    // fake razorpay popup
+    const confirmPay = window.confirm(
+      `Razorpay Test Payment\n\nPay ₹${price} for ${selectedPlan} plan?`
+    );
 
-      handler: async function () {
-        localStorage.setItem("plan", selectedPlan);
-        setPlan(selectedPlan);
+    if (confirmPay) {
 
-        // send invoice email
-        try {
-          await fetch("https://intern-jwq8.onrender.com/send-invoice", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: email,
-              plan: selectedPlan,
-              amount: price
-            })
-          });
-        } catch {}
+      // activate plan
+      localStorage.setItem("plan", selectedPlan);
+      setPlan(selectedPlan);
 
-        alert("🎉 Payment Successful & Invoice Sent!");
-      },
+      // 📧 send invoice email
+      try {
+        await fetch("https://intern-jwq8.onrender.com/send-invoice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email,
+            plan: selectedPlan,
+            amount: price
+          })
+        });
+      } catch (err) {
+        console.log("Email error", err);
+      }
 
-      theme: { color: "#00f2fe" }
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+      alert("🎉 Payment Successful! Premium Plan Activated.");
+    }
   };
 
   return (
     <div style={{ textAlign: "center" }}>
       <h2>Current Plan: {plan}</h2>
 
+      {/* EMAIL */}
       <input
         type="email"
         placeholder="Enter email for invoice"
@@ -87,8 +84,9 @@ export default function PlanUpgrade() {
         }}
       />
 
-      <br/>
+      <br />
 
+      {/* PLAN BUTTONS */}
       {plan === "Free" && (
         <div>
           <button onClick={() => upgradePlan("Bronze", 10)}>Bronze ₹10</button>
@@ -98,18 +96,139 @@ export default function PlanUpgrade() {
       )}
 
       {plan !== "Free" && (
-        <h3 style={{color:"cyan"}}>👑 {plan} Plan Activated</h3>
+        <h3 style={{ color: "cyan" }}>👑 {plan} Plan Activated</h3>
       )}
 
-      <br/>
+      <br />
 
+      {/* VIDEO */}
       <video
         ref={videoRef}
         width="600"
         controls
         onTimeUpdate={handleTimeUpdate}
       >
-        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"/>
+        <source
+          src="https://www.w3schools.com/html/mov_bbb.mp4"
+          type="video/mp4"
+        />
+      </video>
+    </div>
+  );
+}import React, { useState, useEffect, useRef } from "react";
+
+export default function PlanUpgrade() {
+  const [plan, setPlan] = useState("Free");
+  const [email, setEmail] = useState("");
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const savedPlan = localStorage.getItem("plan");
+    if (savedPlan) setPlan(savedPlan);
+  }, []);
+
+  // 🎬 WATCH LIMIT
+  const handleTimeUpdate = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    let limit = 0;
+
+    if (plan === "Free") limit = 5 * 60;
+    if (plan === "Bronze") limit = 7 * 60;
+    if (plan === "Silver") limit = 10 * 60;
+    if (plan === "Gold") limit = 999999;
+
+    if (video.currentTime >= limit) {
+      video.pause();
+      alert(`${plan} plan limit finished. Upgrade for more watching.`);
+    }
+  };
+
+  // 💳 DEMO RAZORPAY PAYMENT (internship safe)
+  const upgradePlan = async (selectedPlan, price) => {
+
+    if (!email) {
+      alert("Enter email first");
+      return;
+    }
+
+    // fake razorpay popup
+    const confirmPay = window.confirm(
+      `Razorpay Test Payment\n\nPay ₹${price} for ${selectedPlan} plan?`
+    );
+
+    if (confirmPay) {
+
+      // activate plan
+      localStorage.setItem("plan", selectedPlan);
+      setPlan(selectedPlan);
+
+      // 📧 send invoice email
+      try {
+        await fetch("https://intern-jwq8.onrender.com/send-invoice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email,
+            plan: selectedPlan,
+            amount: price
+          })
+        });
+      } catch (err) {
+        console.log("Email error", err);
+      }
+
+      alert("🎉 Payment Successful! Premium Plan Activated.");
+    }
+  };
+
+  return (
+    <div style={{ textAlign: "center" }}>
+      <h2>Current Plan: {plan}</h2>
+
+      {/* EMAIL */}
+      <input
+        type="email"
+        placeholder="Enter email for invoice"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        style={{
+          padding: "10px",
+          width: "250px",
+          marginBottom: "15px",
+          borderRadius: "8px"
+        }}
+      />
+
+      <br />
+
+      {/* PLAN BUTTONS */}
+      {plan === "Free" && (
+        <div>
+          <button onClick={() => upgradePlan("Bronze", 10)}>Bronze ₹10</button>
+          <button onClick={() => upgradePlan("Silver", 50)}>Silver ₹50</button>
+          <button onClick={() => upgradePlan("Gold", 100)}>Gold ₹100</button>
+        </div>
+      )}
+
+      {plan !== "Free" && (
+        <h3 style={{ color: "cyan" }}>👑 {plan} Plan Activated</h3>
+      )}
+
+      <br />
+
+      {/* VIDEO */}
+      <video
+        ref={videoRef}
+        width="600"
+        controls
+        onTimeUpdate={handleTimeUpdate}
+      >
+        <source
+          src="https://www.w3schools.com/html/mov_bbb.mp4"
+          type="video/mp4"
+        />
       </video>
     </div>
   );
