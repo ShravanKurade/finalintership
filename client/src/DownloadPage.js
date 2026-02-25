@@ -16,6 +16,7 @@ export default function DownloadPage() {
     setDownloadCount(count);
   }, []);
 
+  // DOWNLOAD
   const handleDownload = () => {
 
     if (!isPremium && downloadCount >= 1) {
@@ -39,19 +40,22 @@ export default function DownloadPage() {
     alert("✅ Download Started!");
   };
 
+  // 💎 RAZORPAY PAYMENT
   const upgradePremium = () => {
 
     const options = {
-      key: "rzp_test_1DP5mmOlF5G5ag",
+      key: "rzp_test_1DP5mmOlF5G5ag",   // demo public key
       amount: 50000,
       currency: "INR",
-      name: "Premium Upgrade",
+      name: "Internship Premium",
       description: "Unlock Unlimited Downloads",
+
       handler: function () {
-        localStorage.setItem("premium", "true");
+        localStorage.setItem("premium","true");
         setIsPremium(true);
         alert("🎉 Payment Successful! Premium Activated.");
       },
+
       theme: { color: "#00f2fe" }
     };
 
@@ -60,10 +64,10 @@ export default function DownloadPage() {
   };
 
   return (
-    <div>
+    <div style={{textAlign:"center"}}>
 
       {isPremium && (
-        <h3 className="premium">👑 Premium User Activated</h3>
+        <h3 style={{color:"cyan"}}>👑 Premium User Activated</h3>
       )}
 
       <button onClick={handleDownload}>
