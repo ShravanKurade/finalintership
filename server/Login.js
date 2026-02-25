@@ -1,96 +1,180 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function Login(){
+const southStates = [
+  "Tamil Nadu",
+  "Kerala",
+  "Karnataka",
+  "Andhra Pradesh",
+  "Telangana"
+];
 
-const [email,setEmail]=useState("");
-const [otp,setOtp]=useState("");
-const [state,setState]=useState("");
-const [verified,setVerified]=useState(false);
+export default function Login() {
 
-const sendOTP = async ()=>{
+  const [email,setEmail]=useState("");
+  const [phone,setPhone]=useState("");
+  const [otp,setOtp]=useState("");
+  const [verified,setVerified]=useState(false);
+  const [state,setState]=useState("");
+  const [theme,setTheme]=useState("dark");
 
-  if(!state){
-    alert("Select state first");
-    return;
-  }
+  // ===== THEME LOGIC =====
+  useEffect(()=>{
+    if(!state) return;
 
-  try{
-    const res = await axios.post(
-      "https://intern-jwq8.onrender.com/send-otp",
-      { email, state }
-    );
+    const now = new Date();
+    const hours = now.getHours();
 
-    if(res.data.success){
-      alert("OTP Sent Successfully ✅");
+    if(hours>=10 && hours<12 && southStates.includes(state)){
+      setTheme("light");
     }else{
-      alert("Failed");
+      setTheme("dark");
     }
 
-  }catch{
-    alert("Server error");
-  }
-};
+  },[state]);
 
-const verify = async ()=>{
-  try{
-    const res = await axios.post(
-      "https://intern-jwq8.onrender.com/verify-otp",
-      { otp }
-    );
+  // ===== SEND OTP =====
+  const sendOTP = async () => {
 
-    if(res.data.success){
-      setVerified(true);
-    }else{
-      alert("Wrong OTP");
+    if(!state){
+      alert("Select state first");
+      return;
     }
 
-  }catch{
-    alert("Server error");
-  }
-};
+    try{
+      const res = await axios.post(
+        "https://intern-jwq8.onrender.com/send-otp",
+        { email, phone, state }
+      );
 
-return(
-<div style={{textAlign:"center",marginTop:"40px"}}>
+      if(res.data.success){
+        alert("OTP Sent Successfully ✅");
+      }else{
+        alert("Failed to send OTP");
+      }
 
-<h2>🔐 Smart Login</h2>
+    }catch{
+      alert("Server error");
+    }
+  };
 
-<select value={state} onChange={e=>setState(e.target.value)}>
-<option value="">Select State</option>
-<option>Maharashtra</option>
-<option>Tamil Nadu</option>
-<option>Kerala</option>
-<option>Karnataka</option>
-<option>Andhra Pradesh</option>
-<option>Telangana</option>
-</select>
+  // ===== VERIFY OTP =====
+  const verify = async () => {
 
-<br/><br/>
+    try{
+      const res = await axios.post(
+        "https://intern-jwq8.onrender.com/verify-otp",
+        { otp }
+      );
 
-<input
-placeholder="Enter Email"
-value={email}
-onChange={e=>setEmail(e.target.value)}
-/>
+      if(res.data.success){
+        setVerified(true);
+      }else{
+        alert("Wrong OTP ❌");
+      }
 
-<br/><br/>
+    }catch{
+      alert("Verification error");
+    }
+  };
 
-<button onClick={sendOTP}>Send OTP</button>
+  return (
+    <div style={{
+      display:"flex",
+      justifyContent:"center",
+      alignItems:"center",
+      padding:"40px 15px"
+    }}>
 
-<br/><br/>
+      <div style={{
+        width:"100%",
+        maxWidth:"420px",
+        background: theme==="light" ? "#ffffff" : "#0f172a",
+        color: theme==="light" ? "#000000" : "#ffffff",
+        padding:"30px 25px",
+        borderRadius:"18px",
+        boxShadow:"0 0 25px rgba(0,255,255,0.35)"
+      }}>
 
-<input
-placeholder="Enter OTP"
-value={otp}
-onChange={e=>setOtp(e.target.value)}
-/>
+        <h2 style={{textAlign:"center",marginBottom:"20px"}}>
+          🔐 Smart Login
+        </h2>
 
-<br/><br/>
+        <select
+          value={state}
+          onChange={(e)=>setState(e.target.value)}
+          style={inputStyle}
+        >
+          <option value="">Select Your State</option>
+          <option>Maharashtra</option>
+          <option>Tamil Nadu</option>
+          <option>Kerala</option>
+          <option>Karnataka</option>
+          <option>Andhra Pradesh</option>
+          <option>Telangana</option>
+          <option>Gujarat</option>
+          <option>Delhi</option>
+        </select>
 
-<button onClick={verify}>Verify</button>
+        <input
+          placeholder="Enter Email"
+          value={email}
+          onChange={(e)=>setEmail(e.target.value)}
+          style={inputStyle}
+        />
 
-{verified && <h3 style={{color:"green"}}>User Verified ✅</h3>}
+        <input
+          placeholder="Enter Phone Number"
+          value={phone}
+          onChange={(e)=>setPhone(e.target.value)}
+          style={inputStyle}
+        />
 
-</div>
-);
+        <button onClick={sendOTP} style={btnStyle}>
+          Send OTP
+        </button>
+
+        <input
+          placeholder="Enter OTP"
+          value={otp}
+          onChange={(e)=>setOtp(e.target.value)}
+          style={inputStyle}
+        />
+
+        <button onClick={verify} style={btnStyle}>
+          Verify
+        </button>
+
+        {verified && (
+          <h3 style={{color:"#22c55e",textAlign:"center"}}>
+            ✅ User Verified Successfully
+          </h3>
+        )}
+
+      </div>
+    </div>
+  );
 }
+
+const inputStyle={
+  width:"100%",
+  padding:"14px",
+  marginBottom:"15px",
+  borderRadius:"10px",
+  border:"1px solid #334155",
+  outline:"none",
+  fontSize:"15px",
+  boxSizing:"border-box"
+};
+
+const btnStyle={
+  width:"100%",
+  padding:"13px",
+  background:"#06b6d4",
+  color:"white",
+  border:"none",
+  borderRadius:"10px",
+  fontSize:"15px",
+  marginBottom:"15px",
+  cursor:"pointer"
+};

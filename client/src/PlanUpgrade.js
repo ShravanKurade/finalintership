@@ -28,7 +28,7 @@ export default function PlanUpgrade() {
     }
   };
 
-  // 💳 PAYMENT
+  // 💳 PAYMENT + EMAIL
   const upgradePlan = (selectedPlan, price) => {
 
     if (!email) {
@@ -42,14 +42,15 @@ export default function PlanUpgrade() {
       currency: "INR",
       name: "Plan Upgrade",
       description: selectedPlan + " Plan",
+
       handler: async function () {
 
         localStorage.setItem("plan", selectedPlan);
         setPlan(selectedPlan);
 
-        // 🔥 SEND EMAIL
+        // 🔥 SEND EMAIL INVOICE (RENDER BACKEND)
         try {
-          await fetch("http://localhost:5000/send-invoice", {
+          await fetch("https://intern-jwq8.onrender.com/send-invoice", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -64,6 +65,7 @@ export default function PlanUpgrade() {
 
         alert("🎉 Payment Successful! Invoice sent to email");
       },
+
       theme: { color: "#00f2fe" }
     };
 
