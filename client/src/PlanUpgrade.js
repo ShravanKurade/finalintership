@@ -24,63 +24,51 @@ export default function PlanUpgrade() {
 
     if (video.currentTime >= limit) {
       video.pause();
-      alert(`⛔ ${plan} plan limit finished. Upgrade for more watching.`);
+      alert(`⛔ ${plan} plan limit finished. Upgrade plan.`);
     }
   };
 
-  // 💳 PAYMENT + EMAIL
-  const upgradePlan = (selectedPlan, price) => {
+  // 💎 DEMO PAYMENT + EMAIL
+  const upgradePlan = async (selectedPlan, price) => {
 
     if (!email) {
-      alert("⚠ Enter your email first");
+      alert("Enter email first");
       return;
     }
 
-    const options = {
-      key: "rzp_test_1DP5mmOlF5G5ag",
-      amount: price * 100,
-      currency: "INR",
-      name: "Plan Upgrade",
-      description: selectedPlan + " Plan",
+    const confirmPay = window.confirm(
+      `Proceed payment for ${selectedPlan} plan ₹${price}?`
+    );
 
-      handler: async function () {
+    if(confirmPay){
 
-        localStorage.setItem("plan", selectedPlan);
-        setPlan(selectedPlan);
+      localStorage.setItem("plan", selectedPlan);
+      setPlan(selectedPlan);
 
-        // 🔥 SEND EMAIL INVOICE (RENDER BACKEND)
-        try {
-          await fetch("https://intern-jwq8.onrender.com/send-invoice", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: email,
-              plan: selectedPlan,
-              amount: price
-            })
-          });
-        } catch (err) {
-          console.log("Email error:", err);
-        }
+      // 📧 SEND EMAIL INVOICE
+      try {
+        await fetch("https://intern-jwq8.onrender.com/send-invoice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email,
+            plan: selectedPlan,
+            amount: price
+          })
+        });
+      } catch {}
 
-        alert("🎉 Payment Successful! Invoice sent to email");
-      },
-
-      theme: { color: "#00f2fe" }
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+      alert("🎉 Payment Successful & Invoice Sent!");
+    }
   };
 
   return (
     <div style={{ textAlign: "center" }}>
       <h2>Current Plan: {plan}</h2>
 
-      {/* EMAIL INPUT */}
       <input
         type="email"
-        placeholder="Enter your email for invoice"
+        placeholder="Enter email for invoice"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         style={{
