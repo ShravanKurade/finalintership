@@ -6,17 +6,20 @@ export default function DownloadPage() {
   const [isPremium, setIsPremium] = useState(false);
   const [downloadCount, setDownloadCount] = useState(0);
 
+  const videoUrl = "https://www.w3schools.com/html/mov_bbb.mp4";
+
   useEffect(() => {
-    const premiumStatus = localStorage.getItem("premium");
+    const plan = localStorage.getItem("plan");
+    if (plan && plan !== "Free") setIsPremium(true);
+
     const storedDownloads = JSON.parse(localStorage.getItem("downloads")) || [];
     const count = parseInt(localStorage.getItem("downloadCount")) || 0;
 
-    setIsPremium(premiumStatus === "true");
     setDownloads(storedDownloads);
     setDownloadCount(count);
   }, []);
 
-  // 🎬 DOWNLOAD
+  // 🎬 Download Logic
   const handleDownload = () => {
 
     if (!isPremium && downloadCount >= 1) {
@@ -24,11 +27,13 @@ export default function DownloadPage() {
       return;
     }
 
-    const videoName = "SampleVideo.mp4";
+    const link = document.createElement("a");
+    link.href = videoUrl;
+    link.download = "SampleVideo.mp4";
+    link.click();
 
-    const newDownloads = [...downloads, videoName];
+    const newDownloads = [...downloads, "SampleVideo.mp4"];
     setDownloads(newDownloads);
-
     localStorage.setItem("downloads", JSON.stringify(newDownloads));
 
     if (!isPremium) {
@@ -40,39 +45,26 @@ export default function DownloadPage() {
     alert("✅ Download Started!");
   };
 
-  // 💎 DEMO PAYMENT (real jaisa popup)
-  const upgradePremium = () => {
-
-    const fake = window.confirm(
-      "Razorpay Secure Payment\n\nAmount: ₹500\nProceed to pay?"
-    );
-
-    if(fake){
-      setTimeout(()=>{
-        localStorage.setItem("premium","true");
-        setIsPremium(true);
-
-        alert("🎉 Payment Successful!\nPremium Activated.");
-      },1500);
-    }
-  };
-
   return (
-    <div style={{textAlign:"center"}}>
+    <div style={{ textAlign: "center" }}>
+
+      <h2>🎬 Video Download Section</h2>
 
       {isPremium && (
-        <h3 style={{color:"cyan"}}>👑 Premium User Activated</h3>
+        <h3 style={{ color: "cyan" }}>👑 Premium User</h3>
       )}
 
+      {/* VIDEO PLAYER */}
+      <video width="600" controls style={{ marginBottom: "15px" }}>
+        <source src={videoUrl} type="video/mp4" />
+      </video>
+
+      <br />
+
+      {/* DOWNLOAD BUTTON */}
       <button onClick={handleDownload}>
-        Download Video
+        ⬇ Download Video
       </button>
-
-      {!isPremium && (
-        <button onClick={upgradePremium}>
-          Upgrade to Premium ₹500
-        </button>
-      )}
 
       <h4>Your Downloads:</h4>
 
